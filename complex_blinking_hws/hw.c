@@ -33,11 +33,9 @@ int main()
 
     while(1)
     {
-        // set gpio17 high
-        *(gpio + 7) = 1 << 17;
+        digitalWrite(LED_PIN, HIGH);
         sleep(1);
-        // set gpio17 low
-        *(gpio + 10) = 1 << 17;
+        digitalWrite(LED_PIN, LOW);
         sleep(1);
     }
 
