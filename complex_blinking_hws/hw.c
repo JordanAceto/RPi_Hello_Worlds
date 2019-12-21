@@ -5,8 +5,11 @@
 #include <sys/mman.h>
 #include <stdint.h>
 
+// pointer to BCM2837 memory map
 static volatile uint32_t *gpio;
 
+// warning, there is currently no error checking, 
+// so make sure you pass in a valid pin number!
 const uint8_t LED_PIN = 17; // gpio17
 
 void setup();
@@ -52,16 +55,17 @@ void setup()
         exit(-1);
     }
 
-    // start address for BCM2837 gpio memory region
+    // start address for BCM2837 GPIO memory region
     const uint32_t GPFSEL0 = 0x3F200000;
     
-    gpio = (uint32_t *)mmap
-        (0, 
+    gpio = (uint32_t *)mmap(
+        0, 
         getpagesize(), 
         PROT_READ|PROT_WRITE, 
         MAP_SHARED, 
         fd, 
-        GPFSEL0);
+        GPFSEL0
+    );
 
     if (gpio == MAP_FAILED)
     {
@@ -72,6 +76,11 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
 }
 
+/* 
+note: there should really be some error checking to make sure you're
+actually passing in a valid pin, there is the possibility of messing
+up your pi if you pass garbage in to this function, beware!
+*/
 void pinMode(const uint8_t gpio_pin_num, const pin_mode_t pin_mode)
 {
     // see datasheet pg 91
@@ -92,6 +101,11 @@ void pinMode(const uint8_t gpio_pin_num, const pin_mode_t pin_mode)
     }
 }
 
+/* 
+note: there should really be some error checking to make sure you're
+actually passing in a valid pin, there is the possibility of messing
+up your pi if you pass garbage in to this function, beware!
+*/
 void digitalWrite(const uint8_t gpio_pin_num, const digital_write_t value)
 {
     // see datasheet pg 90
