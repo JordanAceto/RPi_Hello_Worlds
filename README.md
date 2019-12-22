@@ -8,3 +8,6 @@
 - complex_blinking_hws: contains .c files (and hopefully asm files in the future) that blink an LED without using gpio libraries
 
 ### This is just a scratchpad for ideas, not a complete or well thought out finished product 
+
+### Here is the layout used for all LED blinking programs:
+![Alt text](./GPIO_LED_layout.png?raw=true "Title") 
