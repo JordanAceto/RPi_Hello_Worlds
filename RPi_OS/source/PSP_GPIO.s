@@ -37,7 +37,7 @@ Function Description:
 
 Inputs:
     r0: GPIO pin number
-    r1: GPIO pin mode, 0 == Input, 1 == Output
+    r1: GPIO pin mode, 0 == Input, 1 == Output, 2 to 7 == alternate function, greater than 7 == no effect
 
 Returns:
     None
@@ -77,7 +77,7 @@ PSP_GPIO_Set_Pin_Mode:
     .unreq      pin_num                 @ pin_num is no longer meaningful, we now care about the pin position
     pin_pos     .req        r2          @ which is (pin_num % 10) * 3, this position of the 3 mode bits in GPFSEL_n
 
-    add         pin_pos,    pin_pos, lsl #1
+    add pin_pos, pin_pos, lsl #1        @ pin_pos *= 3
     lsl         pin_mode,   pin_pos     @ the 3 relevant mode bits are now in position
 
     mask        .req        r3          @ need to mask out the 3 mode bits so we don't overwrite other pins
@@ -119,7 +119,7 @@ Returns:
     None
 
 Error Handling:
-    Returns without having any effect if the pin number or pin value are out of range.
+    Returns without having any effect if the pin number is out of range.
 
     Has no effect if the GPIO pin is not set to Output. However, if the pin is subsequently 
     defined as an output then the bit will be set according to the last set/clear operation.
