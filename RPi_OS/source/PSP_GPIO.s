@@ -130,36 +130,83 @@ Equivalent C function signature:
 -------------------------------------------------------------------------------------------------*/
 .globl  PSP_GPIO_Write_Pin    
 PSP_GPIO_Write_Pin:
-    pin     .req    r0              @ set up aliases for r0 and r1, pin is the gpio_pin_number, 
-    val     .req    r1              @ val is the value to write, 0 for low and non-zero for high
+    pin_num     .req        r0                  @ set up aliases for r0 and r1, pin is the gpio_pin_number, 
+    pin_val     .req        r1                  @ val is the value to write, 0 for low and non-zero for high
 
-    cmp     pin,    #53             @ if the pin number is out of range, 
-    movhi   pc,     lr              @ return from the function without doing anything
+    cmp         pin_num,    #53                 @ if the pin number is out of range, 
+    movhi       pc,         lr                  @ return from the function without doing anything
 
-    push    {lr}                    @ preserve the address in the link register on the stack
-    mov     r2,     pin             @ preserve the gpio pin number in r2
-    .unreq  pin
-    pin     .req    r2              @ update the alias for the gpio pin number
+    mov         r2,         pin_num             @ preserve the gpio pin number in r2
+    .unreq      pin_num
+    pin_num     .req        r2                  @ update the alias for the gpio pin number
 
-    bl      PSP_GPIO_Get_Base_Addr  @ get a pointer to the gpio base address, put it in r0
-    addr    .req    r0              @ alias for gpio pointer
+    push        {lr}                            @ preserve the address in the link register on the stack
 
-    pins    .req    r3              @ need to find GPSET_n or GPCLR_n, 
-    lsr     pins,   pin,    #5      @ pins = (pin_num // 32)
-    lsl     pins,   #2              @ pins *= 4
-    add     addr,   pins            @ if pin_num >= 32, add 4 to gpio_base to move GPSET0 / GPCLR0 to GPSET/CLR1
-    .unreq  pins
+    bl          Increment_GPIO_Base_If_Pin_GT_31
+    gpio_base   .req        r0
 
-    and     pin,    #31             @ mask out 5 lsbs
-    setBit  .req    r3
-    mov     setBit, #1
-    lsl     setBit, pin             @ setBit = (1 << pin_num)
-    .unreq  pin
+    .unreq      pin_num
+    pin_pos     .req        r2
+    and         pin_pos,    #31                 @ mask out 5 lsb's to get pin position
+    
+    set_bit     .req        r3
+    mov         set_bit,    #1
+    lsl         set_bit,    pin_pos
+    .unreq      pin_pos                         @ pin_pos = (1 << (pin_num & 31))
 
-    teq     val,    #0              @ value of 0 means set pin low, anything else means set pin high
-    .unreq  val
-    streq   setBit, [addr, #0x28]   @ set pin position in GPCLR_n to write pin low
-    strne   setBit, [addr, #0x1C]   @ set pin position in GPSET_n to write pin high
-    .unreq  setBit
-    .unreq  addr
-    pop     {pc}
+    teq         pin_val,    #0                  @ value of 0 means set pin low, anything else means set pin high
+    .unreq      pin_val
+    streq       set_bit,    [gpio_base, #0x28]  @ set pin position in GPCLR_n to write pin low
+    strne       set_bit,    [gpio_base, #0x1C]  @ set pin position in GPSET_n to write pin high
+    
+    .unreq      set_bit
+    .unreq      gpio_base
+
+    pop         {pc}
+
+
+
+/*-----------------------------------------------------------------------------------------------
+
+Function Name:
+    Increment_GPIO_Base_If_Pin_GT_31
+
+Function Description:
+    GPIO registers such as GPSET, GPCLR, GPLEV, etc. are made of two separate registers, GPxxx0 and GPxxx1
+
+    GPxxx0 handles pins [0, 31], and GPxxx1 handles pins [32, 53]
+
+    This helper function takes in a pin number, and returns a pointer to the GPIO base address, plus an offset of 4
+    if the pin falls in the range [32, 53]
+
+Inputs:
+    r0: GPIO pin number
+
+Returns:
+    Pointer to the base address of the GPIO region of memory plus an optional offset if pin > 31
+
+Error Handling:
+    None. It is the responsibility of the caller of this function to provide a valid pin number in r0
+
+Equivalent C function signature:
+    void* Increment_GPIO_Base_If_Pin_GT_31(uint32_t pin_num)
+
+-------------------------------------------------------------------------------------------------*/
+Increment_GPIO_Base_If_Pin_GT_31:
+    pin_num     .req        r0          @ set up aliases for r0 
+
+    push        {lr}
+
+    mov         r2,         pin_num     @ move the pin number into r2 so r0 is freed up for the gpio base address
+    .unreq      pin_num
+    pin_num     .req        r2
+
+    bl          PSP_GPIO_Get_Base_Addr  
+    gpio_base   .req        r0          @ increment the gpio_base to the correct GPFSEL register
+
+    cmpls       pin_num,    #31
+    .unreq      pin_num
+    addhi       gpio_base,  gpio_base, #4
+    .unreq      gpio_base
+
+    pop         {pc}                    @ return with the potentially incremented gpio_base in r0
