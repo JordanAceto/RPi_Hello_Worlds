@@ -85,7 +85,7 @@ PSP_GPIO_Set_Pin_Mode:
     lsl         mask,       pin_pos     @ shift the 3 bit mask into position
     .unreq      pin_pos                 @ done with pin_pos, free up r2
 
-    mvn         mask,       mask        @ invert the mask, ...001110000... is now ...11000111...
+    mvn         mask,       mask        @ invert the mask, ...001110000... is now ...110001111...
 
     old_mode    .req        r2          @ the existing pin mode information, we don't want to change other pins
     ldr         old_mode,   [gpfsel_n]
