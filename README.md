@@ -6,6 +6,7 @@
 - simple_printing_hws: contains simple .py, .c, and .s files that print "hello "world"
 - simple_blinking_hws: contains .py and .c files that blink an LED using gpio libraries
 - complex_blinking_hws: contains a .c file and a directory for assembly files that blink an LED without using gpio libraries
+- Rpi_OS: contains assembly files that make up a very rudimentary OS that just blinks a LED
 
 ### This is just a scratchpad for ideas, not a complete or well thought out finished product 
 
