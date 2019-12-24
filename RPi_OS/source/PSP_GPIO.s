@@ -22,8 +22,8 @@ Equivalent C function signature:
 -------------------------------------------------------------------------------------------------*/
 .globl PSP_GPIO_Get_Base_Addr
 PSP_GPIO_Get_Base_Addr:
-    ldr     r0,     =0x3F200000     @ base of GPIO region of memory
-    mov     pc,     lr
+    ldr         r0,         =0x3F200000     @ base of GPIO region of memory
+    mov         pc,          lr
 
 
 
@@ -51,24 +51,55 @@ Equivalent C function signature:
 -------------------------------------------------------------------------------------------------*/
 .globl PSP_GPIO_Set_Pin_Mode
 PSP_GPIO_Set_Pin_Mode:
-    cmp     r0,     #53             @ pi has 54 (0 to 53) GPIO pins
-    cmpls   r1,     #7              @ pin input/output takes up 3 bits: 7 == 0b111
-    movhi   pc,     lr              @ exit if pin num or input/output type is out of range
 
-    push    {lr}
-    mov     r2,     r0              @ stash the pin number in r2
-    bl      PSP_GPIO_Get_Base_Addr  @ put the pointer to gpio base in r0
+    pin_num     .req        r0
+    pin_mode    .req        r1
 
-    process_pin$:                   @ process the pin number so that it indexes correctly into GPFSEL_n
-        cmp     r2,     #9          @ GPFSEL regs are grouped by 10 gpio pins each
-        subhi   r2,     #10         @ as long as the gpio pin num in r2 is at least 10, subtract 10 from it and 
-        addhi   r0,     #4          @ add 4 to the gpio base address in r0, at the end r2 will contain (gpio_pin % 10)
-        bhi     process_pin$        @ and r0 will contain (gpio_base + gpfsel_offset)
+    cmp         pin_num,    #53         @ pi has 54 (0 to 53) GPIO pins
+    cmpls       pin_mode,   #0b111      @ pin input/output takes up 3 bits: 7 == 0b111
+    movhi       pc,         lr          @ exit if pin num or input/output type is out of range
 
-    add     r2,     r2,     lsl #1  @ (gpio_pin % 10) * 3, this is the position of the 3 bits for this pin in GPFSEL_n
-    lsl     r1,     r2              @ (1 << pin_position), r0 is already incremented to the correct offset
-    str     r1,     [r0]            @ set GPFSEL_n bit at the pin position to the pin_mode input paramter
-    pop     {pc}                    @ return from the function
+    push        {lr}
+
+    mov         r2,         pin_num     @ move the pin number into r2 so r0 is freed up for the gpio base address
+    .unreq      pin_num
+    pin_num     .req        r2
+
+    bl          PSP_GPIO_Get_Base_Addr  @ get the base GPIO address, we'll do some math to the pin number to 
+    gpfsel_n    .req        r0          @ increment the gpio_base to the correct GPFSEL register
+
+    process_pin$:                       @ GPFSEL regs are grouped by 10 gpio pins each, we need to find which GPFSEL
+        cmp     pin_num,    #9          @ reg the pin goes into. first need (pin_num % 10), without costly division.
+        subhi   pin_num,    #10         @ move into the next GPFSEL reg for each factor of 10 in the pin_num
+        addhi   gpfsel_n,   #4          @ at the end pin_num will contain (pin_num % 10) and gpfsel_n will point
+        bhi     process_pin$            @ to the correct GPFSEL register for the pin
+
+    .unreq      pin_num                 @ pin_num is no longer meaningful, we now care about the pin position
+    pin_pos     .req        r2          @ which is (pin_num % 10) * 3, this position of the 3 mode bits in GPFSEL_n
+
+    add         pin_pos,    pin_pos, lsl #1
+    lsl         pin_mode,   pin_pos     @ the 3 relevant mode bits are now in position
+
+    mask        .req        r3          @ need to mask out the 3 mode bits so we don't overwrite other pins
+    mov         mask,       #0b111
+    lsl         mask,       pin_pos     @ shift the 3 bit mask into position
+    .unreq      pin_pos                 @ done with pin_pos, free up r2
+
+    mvn         mask,       mask        @ invert the mask, ...001110000... is now ...11000111...
+
+    old_mode    .req        r2          @ the existing pin mode information, we don't want to change other pins
+    ldr         old_mode,   [gpfsel_n]
+    and         old_mode,   mask        @ clear the 3 bits for this pins mode, leave others untouched
+    .unreq      mask
+
+    orr         pin_mode,   old_mode    @ set the 3 bits for this pins mode
+    .unreq      old_mode
+
+    str         pin_mode,   [gpfsel_n]  @ set GPFSEL_n bit at the pin position to the pin_mode input paramter  
+    .unreq      pin_mode
+    .unreq      gpfsel_n 
+
+    pop     {pc}                        @ return from the function
 
 
 
