@@ -169,6 +169,63 @@ PSP_GPIO_Write_Pin:
 /*-----------------------------------------------------------------------------------------------
 
 Function Name:
+    PSP_GPIO_Read_Pin
+
+Function Description:
+    Read a GPIO pin and return 0 if the pin in low and 1 if the pin is high
+
+Inputs:
+    r0: GPIO pin number to read
+
+Returns:
+    None
+
+Error Handling:
+    Returns 0 if the pin number is out of range
+
+Equivalent C function signature:
+    uint32_t PSP_GPIO_Read_Pin(uint32_t pin_num)
+
+-------------------------------------------------------------------------------------------------*/
+.globl  PSP_GPIO_Read_Pin
+PSP_GPIO_Read_Pin:
+    pin_num     .req        r0                  @ set up aliases for r0  
+
+    cmp         pin_num,    #53                 @ if the pin number is out of range, 
+    movhi       r0,         #0                  @ set r0 to zero
+    movhi       pc,         lr                  @ return from the function without doing anything else
+
+    mov         r2,         pin_num             @ preserve the gpio pin number in r2
+    .unreq      pin_num
+    pin_num     .req        r2                  @ update the alias for the gpio pin number
+
+    push        {lr}                            @ preserve the address in the link register on the stack
+
+    bl          Increment_GPIO_Base_If_Pin_GT_31
+    gpio_base   .req        r0                  @ base of gpio section, plus 4 if pin num is greater than 31
+
+    gplev_n     .req        r3
+    ldr         gplev_n,    [gpio_base, #0x34]  @ read the GPLEV0/1 register
+    .unreq      gpio_base
+
+    .unreq      pin_num
+    pin_pos     .req        r2
+    and         pin_pos,    #31                 @ mask out 5 lsb's to get pin position
+
+    lsr         gplev_n,    pin_pos             @ shift gplev_n reg so that the pin we want to read is in the lsb
+    .unreq      pin_pos
+
+    and         gplev_n,    #1                  @ r3 now contains a 0 or a 1, depending on the pin val at GPLEV_n   
+    mov         r0,         gplev_n             @ move the return value into r0         
+    .unreq      gplev_n
+
+    pop         {pc}                            @ return
+
+
+
+/*-----------------------------------------------------------------------------------------------
+
+Function Name:
     Increment_GPIO_Base_If_Pin_GT_31
 
 Function Description:
