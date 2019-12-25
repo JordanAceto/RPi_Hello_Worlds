@@ -1,5 +1,19 @@
 
 /*-----------------------------------------------------------------------------------------------
+    PSP_Time Constants
+ -------------------------------------------------------------------------------------------------*/
+.equ    PSP_Time_BASE_ADDRESS,  0x3F003000  @ base of System Timer Register
+.equ    PSP_Time_CS,            0x3F003000  @ System Timer Control/Status
+.equ    PSP_Time_CLO,           0x3F003004  @ System Timer Counter Lower 32 bits
+.equ    PSP_Time_CHI,           0x3F003008  @ System Timer Counter Higher 32 bits
+.equ    PSP_Time_C0,            0x3F00300C  @ System Timer Compare 0
+.equ    PSP_Time_C1,            0x3F003010  @ System Timer Compare 1
+.equ    PSP_Time_C2,            0x3F003014  @ System Timer Compare 2
+.equ    PSP_Time_C3,            0x3F003018  @ System Timer Compare 3
+
+
+
+/*-----------------------------------------------------------------------------------------------
 
 Function Name:
     PSP_Time_Get_Base_Addr
@@ -22,7 +36,7 @@ Equivalent C function signature:
 -------------------------------------------------------------------------------------------------*/
 .globl PSP_Time_Get_Base_Addr
 PSP_Time_Get_Base_Addr:
-    ldr     r0,     =0x3F003000     @ base of System Timer Register region of memory
+    ldr     r0,     =PSP_Time_BASE_ADDRESS
     mov     pc,     lr
 
 
@@ -50,12 +64,9 @@ Equivalent C function signature:
 -------------------------------------------------------------------------------------------------*/
 .globl  PSP_Time_Get_Timebase
 PSP_Time_Get_Timebase:
-    push    {lr}
-
-    bl      PSP_Time_Get_Base_Addr
-
-    ldrd    r0,     r1,     [r0, #4]
-    pop     {pc}
+    ldr     r0,     =PSP_Time_CLO
+    ldrd    r0,     r1,              [r0]
+    mov     pc,     lr
 
 
 
@@ -82,12 +93,9 @@ Equivalent C function signature:
 -------------------------------------------------------------------------------------------------*/
 .globl  PSP_Time_Get_CLO
 PSP_Time_Get_CLO:
-    push    {lr}
-
-    bl      PSP_Time_Get_Base_Addr
-
-    ldr     r0,     [r0, #4]
-    pop     {pc}
+    ldr     r0,     =PSP_Time_CLO
+    ldr     r0,     [r0]
+    mov     pc,     lr
 
 
 
@@ -114,12 +122,9 @@ Equivalent C function signature:
 -------------------------------------------------------------------------------------------------*/
 .globl  PSP_Time_Get_CHI
 PSP_Time_Get_CHI:
-    push    {lr}
-
-    bl      PSP_Time_Get_Base_Addr
-
-    ldr     r0,     [r0, #8]
-    pop     {pc}
+    ldr     r0,     =PSP_Time_CHI
+    ldr     r0,     [r0]
+    mov     pc,     lr
 
 
 
