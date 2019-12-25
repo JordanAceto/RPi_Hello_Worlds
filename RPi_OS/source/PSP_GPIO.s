@@ -179,33 +179,26 @@ PSP_GPIO_Write_Pin:
     cmp         pin_num,    #53         @ if the pin number is out of range, 
     movhi       pc,         lr          @ return from the function without doing anything
 
-    offset      .req        r2
-    mov         offset,     #0
-    cmp         pin_num,    #31         @ if the pin num goes in GPSET/CLR1 (as opposed to GPSET/CLR0)
-    addhi       offset,     #4          @ store the offset of 4, this will be used to offset the reg later
-
-    .unreq      pin_num                 @ pin_num is no longer meaningful, we now care about the pin position, which is
-    pin_pos     .req        r0          @ pin_num & 31, the 5 lsb's of pin_num
-    and         pin_pos,    #31         @ mask out 5 lsb's to get pin position
-
-    set_bit     .req        r3
-    mov         set_bit,    #1
-    lsl         set_bit,    pin_pos     @ set_bit = (1 << (pin_num & 31))
-    .unreq      pin_pos                 @ free up r0 
-
-    s_c_reg     .req        r0          @ store the address of GPSET/CLR0, we'll add in the offset later
+    s_c_reg     .req        r2          @ store the address of GPSET/CLR0, we'll add in the offset later if needed
     teq         pin_val,    #0          @ value of 0 means set pin low, anything else means set pin high
-    .unreq      pin_val                 @ free up r1
+    .unreq      pin_val                 @ free r1
 
     ldreq       s_c_reg,    =PSP_GPIO_GPCLR0 
     ldrne       s_c_reg,    =PSP_GPIO_GPSET0
-    
-    add         s_c_reg,    offset      @ add the offset in to the GPSET/CLR register, offset is either 0 or 4
-    .unreq      offset
 
-    str         set_bit,    [s_c_reg]   @ write the pin to the calculated register
-    .unreq      s_c_reg
-    .unreq      set_bit
+    cmp         pin_num,    #31         @ if the pin num goes in GPSET/CLR1 (as opposed to GPSET/CLR0)
+    addhi       s_c_reg,    #4          @ increment the GPSET/CLR0 register to GPSET/CLR1
+
+    and         pin_num,    #31         @ mask out 5 lsb's to get pin position in the GPSET/CLRn register
+    set_bit     .req        r1
+    mov         set_bit,    #1
+    lsl         set_bit,    pin_num     @ set_bit = (1 << (pin position))
+    .unreq      pin_num                 @ free up r0 
+
+    str         set_bit,    [s_c_reg]   @ write the pin in the calculated register
+
+    .unreq      s_c_reg                 @ free r2
+    .unreq      set_bit                 @ free r1
 
     mov         pc,         lr          @ return
 
