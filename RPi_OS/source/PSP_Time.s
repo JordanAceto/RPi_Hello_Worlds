@@ -171,3 +171,36 @@ PSP_Time_Delay_Microseconds:
     .unreq  uSec
     .unreq  start
     pop     {pc}
+
+
+/*-----------------------------------------------------------------------------------------------
+
+Function Name:
+    PSP_Time_Delay_Milliseconds
+
+Function Description:
+    Wait for a specified number of milliseconds
+
+Inputs:
+    delay_in_mSec: uint32_t time in mSec to wait
+
+Returns:
+    None
+
+Error Handling:
+    None
+
+Equivalent C function signature:
+    void PSP_Time_Delay_Milliseconds(uint32_t delay_in_mSec)
+
+-------------------------------------------------------------------------------------------------*/
+.globl  PSP_Time_Delay_Milliseconds
+PSP_Time_Delay_Milliseconds:
+    ldr     r1,     =1000
+    mul     r0,     r1      @ multiply mSec * 1000 to get uSec and then delegate to PSP_Time_Delay_Microseconds
+
+    push    {lr}
+
+    bl      PSP_Time_Delay_Microseconds
+
+    pop     {pc}         
