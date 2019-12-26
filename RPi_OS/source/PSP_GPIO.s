@@ -135,7 +135,7 @@ PSP_GPIO_Set_Pin_Mode:
     and         old_mode,   mask        @ clear the 3 bits for this pins mode, leave others untouched
     .unreq      mask
 
-    orr         pin_mode,   old_mode    @ set the 3 bits for this pins mode
+    orr         pin_mode,   old_mode    @ combine the old mode setting with the 3 bits for the pin we're setting
     .unreq      old_mode
    
     str         pin_mode,   [gpfsel_n]  @ set GPFSEL_n 3 bits at the pin position to the pin_mode input paramter  
