@@ -216,7 +216,7 @@ Inputs:
     r0: GPIO pin number to read
 
 Returns:
-    None
+    The value of the GPIO pin in r0. (0 or 1)
 
 Error Handling:
     Returns 0 if the pin number is out of range
