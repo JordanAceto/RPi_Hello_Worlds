@@ -1,7 +1,8 @@
 @ simple sign of life program for Raspberry Pi 3b+
 @ uses PSP_GPIO and PSP_TIME modules to blink a
 @ LED on GPIO17 in an sos pattern when a switch
-@ on GPIO21 is pulled high
+@ on GPIO21 is pulled high.
+@ also fades a LED on pin12 with PWM.
 
 
 
@@ -38,22 +39,29 @@ b main
 .section    .text
 
 main:
-mov     sp,     #0x8000         @ set stack pointer to initial value
+mov         sp,         #0x8000         @ set stack pointer to initial value
 
-mov     r0,     #SWITCH_PIN
-mov     r1,     #GPIO_INPUT
-bl      PSP_GPIO_Set_Pin_Mode   @ set gpio 21 to input
+bl          BSP_PWM_Clock_Init          @ init PWM and set pin 12 to PWM output
+bl          BSP_PWM_Ch_1_Start
+bl          BSP_PWM_Ch1_Set_GPIO12_To_PWM_Mode
 
-mov     r0,     #LED_PIN
-mov     r1,     #GPIO_OUTPUT
-bl      PSP_GPIO_Set_Pin_Mode   @ set gpio 17 to output
+mov         r0,         #SWITCH_PIN
+mov         r1,         #GPIO_INPUT
+bl          PSP_GPIO_Set_Pin_Mode       @ set gpio 21 to input
 
-sos     .req    r4              @ sos pattern
-ldr     sos,    =sos_pattern    @ load the address
-ldr     sos,    [sos]           @ then load the actual contents
+mov         r0,         #LED_PIN
+mov         r1,         #GPIO_OUTPUT
+bl          PSP_GPIO_Set_Pin_Mode       @ set gpio 17 to output
 
-index   .req    r5              @ index into the sos pattern
-mov     index,  #0              @ start at index 0
+sos         .req        r4              @ sos pattern
+ldr         sos,        =sos_pattern    @ load the address
+ldr         sos,        [sos]           @ then load the actual contents
+
+index       .req        r5              @ index into the sos pattern
+mov         index,      #0              @ start at index 0
+
+pwm_val     .req        r6              @ pwm value for pin 12, 0 to 255
+mov         pwm_val,    #0
 
 
 /***************************************************************************************************
@@ -62,22 +70,28 @@ mov     index,  #0              @ start at index 0
  *
  ***************************************************************************************************/
 
-loop$:                                  @ main loop label
+loop$:                                   @ main loop label
 
-mov     r0,     #SWITCH_PIN
+mov     r0,         #SWITCH_PIN
 bl      PSP_GPIO_Read_Pin               @ read the switch
 
-mov     r1,     r0                      @ store the result in r1
+mov     r1,         r0                  @ store the result in r1
 
-mov     r0,     #LED_PIN                @ get set up to write to the LED
-lsl     r1,     index                   @ shift the result of the switch read by the index
-and     r1,     sos                     @ and check if the sos pattern is high at that shifted index
+mov     r0,         #LED_PIN            @ get set up to write to the LED
+lsl     r1,         index               @ shift the result of the switch read by the index
+and     r1,         sos                 @ and check if the sos pattern is high at that shifted index
 bl      PSP_GPIO_Write_Pin              @ LED turns on if the switch is high and the pattern at the index is high
 
-add     index,  #1                      @ increment the index
-and     index,  #31                     @ and wrap around when the index goes out of bounds
+add     index,      #1                  @ increment the index
+and     index,      #31                 @ and wrap around when the index goes out of bounds
 
-ldr     r0,     =#DELAY_TIME_mSec       @ kill time
+mov     r0,         pwm_val             @ fade the LED on pin 12 via pwm 
+bl      BSP_PWM_Ch1_Write
+
+add     pwm_val,    pwm_val,    #1
+and     pwm_val,    pwm_val,    #0xFF
+
+ldr     r0,         =#DELAY_TIME_mSec   @ kill time
 bl      PSP_Time_Delay_Milliseconds
 
 b       loop$                           @ go back to the top of the main loop
