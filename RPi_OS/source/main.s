@@ -42,7 +42,7 @@ main:
 mov         sp,         #0x8000         @ set stack pointer to initial value
 
 bl          BSP_PWM_Clock_Init          @ init PWM and set pin 12 to PWM output
-bl          BSP_PWM_Ch_1_Start
+bl          BSP_PWM_Ch1_Start
 bl          BSP_PWM_Ch1_Set_GPIO12_To_PWM_Mode
 
 mov         r0,         #SWITCH_PIN

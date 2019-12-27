@@ -103,7 +103,7 @@ BSP_PWM_Clock_Init:
 /*-----------------------------------------------------------------------------------------------
 
 Function Name:
-    BSP_PWM_Ch_1_Start
+    BSP_PWM_Ch1_Start
 
 Function Description:
     Initialize PWM Channel 1. Resolution is set to 8 bits at 18.75kHz.
@@ -120,11 +120,11 @@ Error Handling:
     None
 
 Equivalent C function signature:
-    void BSP_PWM_Ch_1_Start(void)
+    void BSP_PWM_Ch1_Start(void)
 
 -------------------------------------------------------------------------------------------------*/
-.globl  BSP_PWM_Ch_1_Start
-BSP_PWM_Ch_1_Start:
+.globl  BSP_PWM_Ch1_Start
+BSP_PWM_Ch1_Start:
 
     rng1_addr       .req        r0
     ldr             rng1_addr,  =BSP_PWM_RNG1
@@ -160,7 +160,7 @@ BSP_PWM_Ch_1_Start:
 /*-----------------------------------------------------------------------------------------------
 
 Function Name:
-    BSP_PWM_Ch_2_Start
+    BSP_PWM_Ch2_Start
 
 Function Description:
     Initialize PWM Channel 2. Resolution is set to 8 bits at 18.75kHz.
@@ -177,11 +177,11 @@ Error Handling:
     None
 
 Equivalent C function signature:
-    void BSP_PWM_Ch_2_Start(void)
+    void BSP_PWM_Ch2_Start(void)
 
 -------------------------------------------------------------------------------------------------*/
-.globl  BSP_PWM_Ch_2_Start
-BSP_PWM_Ch_2_Start:
+.globl  BSP_PWM_Ch2_Start
+BSP_PWM_Ch2_Start:
 
     rng1_addr       .req        r0
     ldr             rng1_addr,  =BSP_PWM_RNG2
