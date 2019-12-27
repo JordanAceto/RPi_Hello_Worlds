@@ -4,4 +4,4 @@
 
 ### Some acronyms used:
 - PSP: "Processor Support Package". Files that start with PSP support the processor, things like GPIO, Timebase Registers, etc. fall under PSP. Functions that are specific to the processor go here.
-- BSP: "Board Suppert Package". Files that start with BSP support the physical circuitboard and peripherals installed on it. Empty for now.
+- BSP: "Board Suppert Package". Files that start with BSP support the physical circuitboard and peripherals installed on it.
