@@ -3,6 +3,7 @@
 @ LED on GPIO17 in an sos pattern when a switch
 @ on GPIO21 is pulled high.
 @ also fades a LED on pin12 with PWM.
+@ also repeatedly sends the bytes "DEAD" via SPI0.
 
 
 
@@ -67,6 +68,11 @@ mov         index,      #0              @ start at index 0
 pwm_val     .req        r6              @ pwm value for pin 12, 0 to 255
 mov         pwm_val,    #0              @ start at 0
 
+bl          BSP_SPI0_Start              @ initialize spi0
+
+ldr         r0,         =1024
+bl          BSP_SPI0_Set_Clock_Divider
+
 
 /***************************************************************************************************
  *
@@ -94,6 +100,12 @@ bl      BSP_PWM_Ch1_Write
 
 add     pwm_val,    #1                  @ increment the pwm value
 and     pwm_val,    #PWM_MAX_VAL        @ wrap around at 256
+
+mov     r0,         #0xDE               @ write message of death via spi0
+bl      BSP_SPI0_Transfer_Byte
+
+mov     r0,         #0xAD
+bl      BSP_SPI0_Transfer_Byte
 
 ldr     r0,         =#DELAY_TIME_mSec   @ kill time
 bl      PSP_Time_Delay_Milliseconds
