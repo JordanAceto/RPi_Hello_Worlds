@@ -22,6 +22,10 @@
 
 .equ        DELAY_TIME_mSec,    100
 
+.equ        PATTERN_LEN_MIN_1,  31
+
+.equ        PWM_MAX_VAL,        255
+
 
 /***************************************************************************************************
  *
@@ -61,7 +65,7 @@ index       .req        r5              @ index into the sos pattern
 mov         index,      #0              @ start at index 0
 
 pwm_val     .req        r6              @ pwm value for pin 12, 0 to 255
-mov         pwm_val,    #0
+mov         pwm_val,    #0              @ start at 0
 
 
 /***************************************************************************************************
@@ -83,13 +87,13 @@ and     r1,         sos                 @ and check if the sos pattern is high a
 bl      PSP_GPIO_Write_Pin              @ LED turns on if the switch is high and the pattern at the index is high
 
 add     index,      #1                  @ increment the index
-and     index,      #31                 @ and wrap around when the index goes out of bounds
+and     index,      #PATTERN_LEN_MIN_1  @ and wrap around when the index goes out of bounds
 
 mov     r0,         pwm_val             @ fade the LED on pin 12 via pwm 
 bl      BSP_PWM_Ch1_Write
 
-add     pwm_val,    pwm_val,    #1
-and     pwm_val,    pwm_val,    #0xFF
+add     pwm_val,    #1                  @ increment the pwm value
+and     pwm_val,    #PWM_MAX_VAL        @ wrap around at 256
 
 ldr     r0,         =#DELAY_TIME_mSec   @ kill time
 bl      PSP_Time_Delay_Milliseconds
