@@ -183,17 +183,17 @@ Equivalent C function signature:
 .globl  BSP_PWM_Ch2_Start
 BSP_PWM_Ch2_Start:
 
-    rng1_addr       .req        r0
-    ldr             rng1_addr,  =BSP_PWM_RNG2
+    rng2_addr       .req        r0
+    ldr             rng2_addr,  =BSP_PWM_RNG2
 
-    rng1_val        .req        r1
-    ldr             rng1_val,   =256
+    rng2_val        .req        r1
+    ldr             rng2_val,   =256
 
-    str             rng1_val,   [rng1_addr]         @ set RANGE1 to 256, 8 bits of resolution,
+    str             rng2_val,   [rng2_addr]         @ set RANGE2 to 256, 8 bits of resolution,
                                                     @ final clock speed for PWM is 18.75KHz (4.8MHz / 256)
     
-    .unreq          rng1_addr   @ free r0
-    .unreq          rng1_val    @ free r1
+    .unreq          rng2_addr   @ free r0
+    .unreq          rng2_val    @ free r1
 
     ctl_addr        .req        r0
     ldr             ctl_addr,   =BSP_PWM_CTL
