@@ -4,6 +4,7 @@
 @ on GPIO21 is pulled high.
 @ also fades a LED on pin12 with PWM.
 @ also repeatedly sends the bytes "DEAD" via SPI0.
+@ also repeatedly sends the bytes "BEEF" via I2C to address 0x27 (address of a LCD I had lying around).
 
 
 
@@ -73,6 +74,14 @@ bl          BSP_SPI0_Start              @ initialize spi0
 ldr         r0,         =1024
 bl          BSP_SPI0_Set_Clock_Divider
 
+bl          BSP_I2C_Start
+
+@ use default I2C clock divider
+
+ldr         r0,         =0x27
+bl          BSP_I2C_Set_Slave_Address
+
+
 
 /***************************************************************************************************
  *
@@ -106,6 +115,13 @@ bl      BSP_SPI0_Transfer_Byte
 
 mov     r0,         #0xAD
 bl      BSP_SPI0_Transfer_Byte
+
+
+mov     r0,         #0xBE               @ write message of BEEF via I2C
+bl      BSP_I2C_Write_Byte
+
+mov     r0,         #0xEF
+bl      BSP_I2C_Write_Byte
 
 ldr     r0,         =#DELAY_TIME_mSec   @ kill time
 bl      PSP_Time_Delay_Milliseconds
