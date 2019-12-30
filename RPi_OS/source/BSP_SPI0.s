@@ -3,26 +3,51 @@
     BSP_SPI0 Constants
  -------------------------------------------------------------------------------------------------*/
 
+@ SPI 0 register addresses
+.equ        BSP_SPI0_BASE,      0x3F204000  @ 
+.equ        BSP_SPI0_CS,        0x3F204000  @ SPI Master Control and Status
+.equ        BSP_SPI0_FIFO,      0x3F204004  @ SPI Master TX and RX FIFOs
+.equ        BSP_SPI0_CLK,       0x3F204008  @ SPI Master Clock Divider
+.equ        BSP_SPI0_DLEN,      0x3F20400C  @ SPI Master Data Length
+.equ        BSP_SPI0_LTOH,      0x3F204010  @ SPI LOSSI mode TOH
+.equ        BSP_SPI0_DC,        0x3F204014  @ SPI DMA DREQ Controls
 
-.equ        BSP_SPI0_BASE,      0x3F204000
-.equ        BSP_SPI0_CS,        0x3F204000
-.equ        BSP_SPI0_FIFO,      0x3F204004
-.equ        BSP_SPI0_CLK,       0x3F204008
-.equ        BSP_SPI0_DLEN,      0x3F20400C
-.equ        BSP_SPI0_LTOH,      0x3F204010
-.equ        BSP_SPI0_DC,        0x3F204014
+@ SPI 0 control register masks
+.equ        SPI0_CS_LEN_LONG,   0x02000000  @ Enable Long data word in Lossi mode if DMA_LEN is set
+.equ        SPI0_CS_DMA_LEN,    0x01000000  @ Enable DMA mode in Lossi mode
+.equ        SPI0_CS_CSPOL2,     0x00800000  @ Chip Select 2 Polarity
+.equ        SPI0_CS_CSPOL1,     0x00400000  @ Chip Select 1 Polarity
+.equ        SPI0_CS_CSPOL0,     0x00200000  @ Chip Select 0 Polarity
+.equ        SPI0_CS_RXF,        0x00100000  @ RXF - RX FIFO Full
+.equ        SPI0_CS_RXR,        0x00080000  @ RXR RX FIFO needs Reading ( full)
+.equ        SPI0_CS_TXD,        0x00040000  @ TXD TX FIFO can accept Data
+.equ        SPI0_CS_RXD,        0x00020000  @ RXD RX FIFO contains Data
+.equ        SPI0_CS_DONE,       0x00010000  @ Done transfer Done
+.equ        SPI0_CS_TE_EN,      0x00008000  @ Unused
+.equ        SPI0_CS_LMONO,      0x00004000  @ Unused
+.equ        SPI0_CS_LEN,        0x00002000  @ LEN LoSSI enable
+.equ        SPI0_CS_REN,        0x00001000  @ REN Read Enable
+.equ        SPI0_CS_ADCS,       0x00000800  @ ADCS Automatically Deassert Chip Select
+.equ        SPI0_CS_INTR,       0x00000400  @ INTR Interrupt on RXR
+.equ        SPI0_CS_INTD,       0x00000200  @ INTD Interrupt on Done
+.equ        SPI0_CS_DMAEN,      0x00000100  @ DMAEN DMA Enable
+.equ        SPI0_CS_TA,         0x00000080  @ Transfer Active
+.equ        SPI0_CS_CSPOL,      0x00000040  @ Chip Select Polarity
+.equ        SPI0_CS_CLEAR1,     0x00000020  @ CLEAR FIFO Clear 1
+.equ        SPI0_CS_CLEAR2,     0x00000010  @ CLEAR FIFO Clear 2
+.equ        SPI0_CS_CPOL,       0x00000008  @ Clock Polarity
+.equ        SPI0_CS_CPHA,       0x00000004  @ Clock Phase
+.equ        SPI0_CS_CS1,        0x00000002  @ Chip Select 1
+.equ        SPI0_CS_CS2,        0x00000001  @ Chip Select 2
 
-.equ        CLEAR_FIFO_TX_RX,   0x00000030
-.equ        CS_TA_BIT,          0x00000080
-.equ        CS_TXD_BIT,         0x00040000
-.equ        CS_DONE_BIT,        0x00010000
-
+@ SPI 0 GPIO pin numbers
 .equ        BSP_SPI0_CE1_PIN,   7
 .equ        BSP_SPI0_CE0_PIN,   8
 .equ        BSP_SPI0_MISO_PIN,  9
 .equ        BSP_SPI0_MOSI_PIN,  10
 .equ        BSP_SPI0_CLK_PIN,   11
 
+@ pinmode constants
 .equ        ALT_MODE_0,         0b100
 .equ        GPIO_INPUT,         0
 
@@ -77,7 +102,7 @@ BSP_SPI0_Start:
     ldr         r0,         =BSP_SPI0_CS
     mov         r1,         #0
     str         r1,         [r0]                @ zero out spi status reg
-    mov         r1,         #CLEAR_FIFO_TX_RX
+    mov         r1,         #SPI0_CS_CLEAR1
     str         r1,         [r0]                @ clear fifo rx and tx
 
     pop         {pc}
@@ -210,26 +235,26 @@ BSP_SPI0_Transfer_Byte:
     val         .req        r0
 
     cs_addr     .req        r1
-    ldr         cs_addr,    =BSP_SPI0_CS
+    ldr         cs_addr,    =BSP_SPI0_CS        @ get a handle to the control register
 
     cs_read     .req        r2
 
     ldr         cs_read,    [cs_addr]
-    orr         cs_read,    #CLEAR_FIFO_TX_RX
+    orr         cs_read,    #SPI0_CS_CLEAR1
     str         cs_read,    [cs_addr]           @ clear fifo rx and tx
 
     ldr         cs_read,    [cs_addr]
-    orr         cs_read,    #CS_TA_BIT
-    str         cs_read,    [cs_addr]           @ set TA high to enable transfer
+    orr         cs_read,    #SPI0_CS_TA
+    str         cs_read,    [cs_addr]           @ set Transfer Active high to enable transfer
 
     cs_mask     .req        r3
-    wait_for_TXD_to_go_high:
+    wait_until_FIFO_can_accept_data:            @ wait for fifo to be able to accept data
         ldr         cs_read,    [cs_addr]
-        ldr         cs_mask,    =CS_TXD_BIT
+        ldr         cs_mask,    =SPI0_CS_TXD    @ TXD flag goes high when fifo is ready
         and         cs_mask,    cs_read
 
         cmp         cs_mask,    #0
-        beq         wait_for_TXD_to_go_high
+        beq         wait_until_FIFO_can_accept_data
     .unreq      cs_mask     @ free r3
 
     fifo_addr   .req        r3
@@ -238,13 +263,13 @@ BSP_SPI0_Transfer_Byte:
     .unreq      fifo_addr   @ free r3
 
     cs_mask     .req        r3
-    wait_for_DONE_to_go_high:
+    wait_until_transfer_is_complete:            @ wait for transfer to complete
         ldr         cs_read,    [cs_addr]
-        ldr         cs_mask,    =CS_DONE_BIT
+        ldr         cs_mask,    =SPI0_CS_DONE   @ DONE flag goes high when transfer is done
         and         cs_mask,    cs_read
 
         cmp         cs_mask,    #0
-        beq         wait_for_DONE_to_go_high
+        beq         wait_until_transfer_is_complete
     .unreq      cs_mask     @ free r3
 
     fifo_addr   .req        r3
@@ -254,10 +279,10 @@ BSP_SPI0_Transfer_Byte:
 
     cs_mask     .req        r3
     ldr         cs_read,    [cs_addr]
-    ldr         cs_mask,    =CS_TA_BIT
+    ldr         cs_mask,    =SPI0_CS_TA
     mvn         cs_mask,    cs_mask
     and         cs_mask,    cs_read
-    str         cs_mask,    [cs_addr]           @ set TA low to end the transfer
+    str         cs_mask,    [cs_addr]           @ set Transfer Active low to end the transfer
 
     .unreq      val
     .unreq      cs_addr
