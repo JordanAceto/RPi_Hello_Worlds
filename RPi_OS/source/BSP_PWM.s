@@ -55,7 +55,7 @@
 
 @ CM PWMCTL register masks
 .equ        CM_PWMCTL_PASSWD,   0x5A000000  @ PWM clock password
-.equ        CM_PWMCTL_PWD_REG,  0xFF000000  @ password region of CM PWMCLT register
+.equ        CM_PWMCTL_PWD_MASK, 0xFF000000  @ password takes up the upper two bytes of the CM PWMCLT register
 .equ        CM_PWMCTL_ENAB,     0x00000010  @ CM PWMCLT enable
 .equ        CM_PWMCTL_BUSY,     0x00000080  @ CM PWMCTL Busy flag
 .equ        CM_PWMCTL_USE_OSC,  0x00000011  @ CM PWMCTL use internal oscillator
@@ -102,7 +102,7 @@ BSP_PWM_Clock_Init:
     ldr             cm_pwmctl_read,     [cm_pwmctl_addr]
 
     mask            .req                r3
-    ldr             mask,               =CM_PWMCTL_PWD_REG
+    ldr             mask,               =CM_PWMCTL_PWD_MASK   
     orr             mask,               #CM_PWMCTL_ENAB
     mvn             mask,               mask                        @ mask saves CM_PWMCTL except pwd and clears ENAB
 
