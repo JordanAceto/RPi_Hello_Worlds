@@ -54,7 +54,7 @@
 .equ        PWM_STA_FULL1,      0x00000001  @ Fifo Full Flag
 
 @ CM PWMCTL register masks
-.equ        BSP_CM_PASSWD,      0x5A000000  @ PWM clock password
+.equ        CM_PWMCTL_PASSWD,   0x5A000000  @ PWM clock password
 .equ        CM_PWMCTL_PWD_REG,  0xFF000000  @ password region of CM PWMCLT register
 .equ        CM_PWMCTL_ENAB,     0x00000010  @ CM PWMCLT enable
 .equ        CM_PWMCTL_BUSY,     0x00000080  @ CM PWMCTL Busy flag
@@ -96,7 +96,7 @@ BSP_PWM_Clock_Init:
     ldr             cm_pwmctl_addr,     =BSP_CM_PWMCTL
 
     cm_passwd       .req                r1
-    ldr             cm_passwd,          =BSP_CM_PASSWD
+    ldr             cm_passwd,          =CM_PWMCTL_PASSWD
 
     cm_pwmctl_read  .req                r2
     ldr             cm_pwmctl_read,     [cm_pwmctl_addr]
