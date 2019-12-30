@@ -15,7 +15,6 @@
 
 .equ        BSP_CM_PWMCTL,      0x3F1010A0  @ PWM clock control register
 .equ        BSP_CM_PWMDIV,      0x3F1010A4  @ PWM clock divider register
-.equ        BSP_CM_PASSWD,      0x5A000000  @ PWM clock password
 
 @ PWM Control Register Masks
 .equ        PWM_CTL_MSEN2,      0x00008000  @ Channel 2 M/S Enable
@@ -55,8 +54,9 @@
 .equ        PWM_STA_FULL1,      0x00000001  @ Fifo Full Flag
 
 @ CM PWMCTL register masks
-.equ        CM_PWMCTL_ENAB,     0x00000010  @ CM PWMCLT enable
+.equ        BSP_CM_PASSWD,      0x5A000000  @ PWM clock password
 .equ        CM_PWMCTL_PWD_REG,  0xFF000000  @ password region of CM PWMCLT register
+.equ        CM_PWMCTL_ENAB,     0x00000010  @ CM PWMCLT enable
 .equ        CM_PWMCTL_BUSY,     0x00000080  @ CM PWMCTL Busy flag
 .equ        CM_PWMCTL_USE_OSC,  0x00000011  @ CM PWMCTL use internal oscillator
 
