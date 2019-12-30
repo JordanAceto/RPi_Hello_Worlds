@@ -208,70 +208,63 @@ BSP_I2C_Write_Byte:
 
     val         .req            r0
 
-    @ set data length to 1 byte
-    dlen_addr   .req            r1
+    dlen_addr   .req            r1                      @ set data length to 1 byte
     ldr         dlen_addr,      =BSP_I2C_DLEN
     mov         r2,             #1
     str         r2,             [dlen_addr]
 
     .unreq      dlen_addr
 
-    @ populate fifo with the input value
-    fifo_addr   .req            r1
+    fifo_addr   .req            r1                      @ populate fifo with the input value
     ldr         fifo_addr,      =BSP_I2C_FIFO
     str         val,            [fifo_addr]
 
     .unreq      fifo_addr
 
-    @ clear status
     s_addr      .req            r1
     ldr         s_addr,         =BSP_I2C_S
 
-    clr_mask    .req            r2
+    clr_mask    .req            r2                      @ clear the following status flags:
 
-    mov         clr_mask,       #I2C_S_CLKT
-    orr         clr_mask,       #I2C_S_ERR
-    orr         clr_mask,       #I2C_S_DONE
+    mov         clr_mask,       #I2C_S_CLKT             @ clock stretch timeout
+    orr         clr_mask,       #I2C_S_ERR              @ no acknowledge error
+    orr         clr_mask,       #I2C_S_DONE             @ transfer done
 
     str         clr_mask,       [s_addr]
 
     .unreq      s_addr
     .unreq      clr_mask
 
-    @ enable device and start transfer
-    c_addr      .req            r1
+    c_addr      .req            r1                      @ enable device and start transfer
     ldr         c_addr,         =BSP_I2C_C
 
     start_mask  .req            r2
 
-    mov         start_mask,     #I2C_C_I2CEN
-    orr         start_mask,     #I2C_C_ST
+    mov         start_mask,     #I2C_C_I2CEN            @ I2C enable
+    orr         start_mask,     #I2C_C_ST               @ start transfer
 
-    str         start_mask,     [c_addr]
+    str         start_mask,     [c_addr]                @ dew it
 
     .unreq      c_addr
     .unreq      start_mask
 
-    @ wait for done flag
     s_addr      .req            r1
     ldr         s_addr,         =BSP_I2C_S
 
     s_read      .req            r2
 
-    wait_for_DONE_flag_to_go_high:
+    wait_until_transfer_is_complete:                    @ wait for the transfer to complete
         ldr         s_read,         [s_addr]
-        and         s_read,         #I2C_S_DONE
+        and         s_read,         #I2C_S_DONE         @ DONE flag goes high when transfer is done
         cmp         s_read,         #0
-        beq         wait_for_DONE_flag_to_go_high
+        beq         wait_until_transfer_is_complete
     .unreq      s_read
 
     @ TODO: check acknowledge flag (for returning error code)
 
     @ TODO: deal with clock stretch timeout (for returning error code)
 
-    @ set done flag in order to clear it and end transmission
-
-    done_mask   .req            r2
+    done_mask   .req            r2                      @ set done flag in order to clear it and end transmission
     ldr         done_mask,      [s_addr]
 
     orr         done_mask,      #I2C_S_DONE
@@ -281,5 +274,4 @@ BSP_I2C_Write_Byte:
     .unreq      done_mask
     .unreq      s_addr
 
-    @ return
-    mov         pc,         lr
+    mov         pc,         lr                          @ return
