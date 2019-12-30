@@ -25,7 +25,7 @@
 
 @ masks for I2C status register
 .equ        I2C_S_CLKT,         0x00000200  @ Clock stretch timeout
-.equ        I2C_S_ERR,          0x00000100  @ ACK errorI2C_S_ERR
+.equ        I2C_S_ERR,          0x00000100  @ 0 = No errors detected. 1 = Slave has not acknowledged its address.
 .equ        I2C_S_RXF,          0x00000080  @ RXF FIFO full, 0 = FIFO is not full, 1 = FIFO is full
 .equ        I2C_S_TXE,          0x00000040  @ TXE FIFO full, 0 = FIFO is not full, 1 = FIFO is full
 .equ        I2C_S_RXD,          0x00000020  @ RXD FIFO contains data
@@ -131,7 +131,7 @@ Function Description:
 Inputs:
     r0: CDIV. This must be a power of 2. Only the lower 16 bits are used. Odd number are rounded down.
 
-    SCL = core clock / CDIV Wwere core_clk is nominally 150 MHz. If CDIV is set to 0, the divisor is 32768. 
+    SCL = core_clock / CDIV Where core_clock is nominally 150 MHz. If CDIV is set to 0, the divisor is 32768. 
     CDIV is always rounded down to an even number. The default value should result in a 100 kHz I2C clock
     frequency.
 
@@ -162,7 +162,7 @@ Function Description:
     Sets the I2C slave device address.
 
 Inputs:
-    r0: address, the address of the device to communicate with.
+    r0: address, the 7 bit address of the device to communicate with. Uses only bits [0, 6].
 
 Returns:
     None
@@ -194,7 +194,7 @@ Inputs:
     r0: val, the value to write. (note that only the lowest byte of the 32 bit register r0 will be written)
 
 Returns:
-    None (this should return some error/ok code in the future that specifies if the transmission was succesful)
+    None (TODO: this should return some error/ok code in the future that specifies if the transmission was succesful)
 
 Error Handling:
     None
